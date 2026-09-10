@@ -1,0 +1,43 @@
+{
+  "name": "enterprise-knowledge-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "predev": "node scripts/check-env.mjs && node scripts/cleanup.mjs",
+    "dev": "node scripts/run-next.mjs dev --webpack",
+    "prebuild": "node scripts/check-env.mjs && node scripts/cleanup.mjs",
+    "build": "node scripts/run-next.mjs build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "check-env": "node scripts/check-env.mjs",
+    "stop": "node scripts/cleanup.mjs",
+    "chroma": "chroma run --path ./chroma-data",
+    "chroma:docker": "docker compose up -d chromadb"
+  },
+  "dependencies": {
+    "@google/genai": "^1.30.0",
+    "chromadb": "^3.5.0",
+    "mammoth": "^1.12.2",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
+    "unpdf": "^1.8.1",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "docx": "^9.7.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.4",
+    "pdf-lib": "^1.17.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
