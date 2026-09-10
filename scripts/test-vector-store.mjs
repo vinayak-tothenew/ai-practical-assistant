@@ -1,10 +1,41 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ChromaClient } from "chromadb";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(__dirname, "..", "test-fixtures");
 const baseUrl = process.env.TEST_BASE_URL ?? "http://localhost:3000";
+const integrationCollection =
+  process.env.CHROMA_COLLECTION ?? "enterprise-knowledge-integration-test";
+
+async function loadEnvLocal() {
+  try {
+    const contents = await readFile(path.join(__dirname, "..", ".env.local"), "utf8");
+    for (const line of contents.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) {
+        continue;
+      }
+
+      const separator = trimmed.indexOf("=");
+      if (separator === -1) {
+        continue;
+      }
+
+      const key = trimmed.slice(0, separator).trim();
+      const value = trimmed.slice(separator + 1).trim();
+
+      if (!process.env[key] && value) {
+        process.env[key] = value;
+      }
+    }
+  } catch {
+    // .env.local is optional for partial tests.
+  }
+}
+
+await loadEnvLocal();
 
 function assert(condition, message) {
   if (!condition) {
@@ -21,6 +52,29 @@ async function postJson(url, body) {
 
   const payload = await response.json();
   return { status: response.status, body: payload, raw: JSON.stringify(payload) };
+}
+
+async function getJson(url) {
+  const response = await fetch(url);
+  const payload = await response.json();
+  return { status: response.status, body: payload };
+}
+
+function getChromaClient() {
+  const host = process.env.CHROMA_HOST ?? "localhost";
+  const port = Number.parseInt(process.env.CHROMA_PORT ?? "8000", 10);
+
+  return new ChromaClient({ host, port });
+}
+
+async function resetIntegrationCollection(collectionName) {
+  const client = getChromaClient();
+
+  try {
+    await client.deleteCollection({ name: collectionName });
+  } catch {
+    // Collection may not exist yet — that is the desired empty state.
+  }
 }
 
 async function ingest(filename) {
@@ -56,9 +110,38 @@ async function ensureChromaAvailable() {
   }
 }
 
+async function ensureServerUsesIntegrationCollection() {
+  const status = await getJson(`${baseUrl}/api/search/status`);
+
+  assert(
+    status.status === 200,
+    `Expected /api/search/status to succeed, got ${status.status}`,
+  );
+
+  if (status.body.collection !== integrationCollection) {
+    throw new Error(
+      `Dev server collection mismatch. Expected "${integrationCollection}" but server is using "${status.body.collection}". ` +
+        `Restart the dev server with CHROMA_COLLECTION=${integrationCollection} so integration tests do not touch enterprise-knowledge.`,
+    );
+  }
+
+  return status.body;
+}
+
 console.log("Checking ChromaDB connectivity...");
 await ensureChromaAvailable();
 console.log("✓ ChromaDB is reachable");
+
+console.log(`Resetting isolated test collection "${integrationCollection}"...`);
+await resetIntegrationCollection(integrationCollection);
+console.log("✓ integration test collection reset");
+
+const status = await ensureServerUsesIntegrationCollection();
+assert(
+  status.recordCount === 0,
+  `Expected recordCount 0 after reset, got ${status.recordCount}`,
+);
+console.log("✓ dev server points at empty integration test collection");
 
 const emptySearch = await postJson(`${baseUrl}/api/search`, {
   query: "annual leave entitlement",
@@ -109,6 +192,10 @@ const indexed = (
 
 assert(indexed.distanceMetric === "cosine", "Expected cosine distance metric");
 assert(indexed.indexedChunks === embedded.embeddedChunks.length);
+assert(
+  indexed.collection === integrationCollection,
+  `Expected indexing into ${integrationCollection}, got ${indexed.collection}`,
+);
 console.log(`✓ indexed ${indexed.indexedChunks} chunks into ${indexed.collection}`);
 
 const semanticResponse = await postJson(`${baseUrl}/api/search`, {

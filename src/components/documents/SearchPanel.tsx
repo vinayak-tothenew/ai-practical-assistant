@@ -59,8 +59,8 @@ export function SearchPanel({ documentId }: SearchPanelProps) {
           Semantic search
         </h3>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Ask a question in natural language. Retrieval uses embeddings and
-          cosine similarity — no Claude yet.
+          Inspect raw retrieval results using embeddings and cosine similarity.
+          Use Ask Knowledge Assistant below for Gemini-generated answers.
         </p>
       </div>
 

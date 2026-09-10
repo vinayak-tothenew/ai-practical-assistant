@@ -1,4 +1,6 @@
 export const COLLECTION_NAME = "enterprise-knowledge";
+export const INTEGRATION_TEST_COLLECTION_NAME =
+  "enterprise-knowledge-integration-test";
 export const DEFAULT_TOP_K = 3;
 export const MAX_TOP_K = 20;
 export const INDEX_BATCH_SIZE = 50;

@@ -27,7 +27,7 @@ try {
   envContents = await readFile(envLocalPath, "utf8");
 } catch {
   console.warn(
-    "Missing .env.local — copy .env.example to .env.local and set GEMINI_API_KEY for embeddings.",
+    "Missing .env.local — copy .env.example to .env.local and set GEMINI_API_KEY for embeddings and chat.",
   );
   try {
     await readFile(envExamplePath, "utf8");
@@ -38,12 +38,11 @@ try {
 }
 
 if (envContents) {
-  const match = envContents.match(/^GEMINI_API_KEY=(.*)$/m);
-  const value = match?.[1]?.trim();
+  const gemini = envContents.match(/^GEMINI_API_KEY=(.*)$/m)?.[1]?.trim();
 
-  if (!value) {
+  if (!gemini) {
     console.warn(
-      "GEMINI_API_KEY is empty in .env.local — upload/chunk work; embeddings need a key.",
+      "GEMINI_API_KEY is empty in .env.local — upload/chunk work; embeddings and chat need a key.",
     );
   } else {
     console.log("Environment check passed (GEMINI_API_KEY configured).");

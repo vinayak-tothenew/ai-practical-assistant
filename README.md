@@ -3,7 +3,7 @@
 A Next.js RAG pipeline for ingesting enterprise documents, chunking text, generating embeddings, and searching with ChromaDB.
 
 ```
-Document → Extract → Chunk → Embed → ChromaDB → Semantic Search
+Document → Extract → Chunk → Embed → ChromaDB → Semantic Search → Gemini Answer
 ```
 
 ## Requirements
@@ -12,7 +12,7 @@ Document → Extract → Chunk → Embed → ChromaDB → Semantic Search
 |------|---------|--------------|
 | **Node.js** | 20.9+ (22 LTS recommended) | Dev server, API routes |
 | **npm** | 9+ | Package management |
-| **GEMINI_API_KEY** | — | Embeddings (Milestone 3+) |
+| **GEMINI_API_KEY** | — | Embeddings (M3+) and chat answers (M5) |
 | **Docker Desktop** | — | ChromaDB on Windows x64 (Milestone 4) |
 
 > **Windows note:** Node 24 can cause slow or stuck compiles with Next.js 16. Use **Node 22 LTS** if `npm run dev` hangs on "Compiling /".
@@ -37,7 +37,15 @@ Edit `.env.local`:
 GEMINI_API_KEY=your_key_here
 ```
 
-Get a key from [Google AI Studio](https://aistudio.google.com/apikey).
+Get a Gemini key from [Google AI Studio](https://aistudio.google.com/apikey).
+
+Optional tuning:
+
+```env
+GEMINI_CHAT_MODEL=gemini-3.5-flash
+# Tunable starting point — not universal; adjust for your corpus
+RAG_MIN_SIMILARITY=0.45
+```
 
 ### 3. Start the dev server
 
@@ -80,6 +88,7 @@ Chroma runs at `http://localhost:8000` by default.
 | 2 | Text chunking | `POST /api/documents/chunk` | Dev server |
 | 3 | Gemini embeddings | `POST /api/documents/embed` | `GEMINI_API_KEY` |
 | 4 | ChromaDB index + search | `POST /api/documents/index`, `POST /api/search` | ChromaDB running |
+| 5 | Gemini RAG answers | `POST /api/chat` | `GEMINI_API_KEY`, indexed chunks |
 
 ## Scripts
 
@@ -99,7 +108,24 @@ npm run chroma:docker # Start ChromaDB via Docker
 node scripts/test-ingestion.mjs
 node scripts/test-chunking.mjs
 node scripts/test-embeddings.mjs    # requires GEMINI_API_KEY
-node scripts/test-vector-store.mjs  # requires ChromaDB running
+node scripts/test-vector-store.mjs  # requires ChromaDB + isolated test collection
+node scripts/test-chat.mjs          # requires ChromaDB + GEMINI_API_KEY
+```
+
+For `test-vector-store.mjs` and `test-chat.mjs`, start the dev server with an isolated Chroma collection so tests do not depend on prior indexed data:
+
+```bash
+# PowerShell
+$env:CHROMA_COLLECTION="enterprise-knowledge-integration-test"; npm run dev
+
+# bash
+CHROMA_COLLECTION=enterprise-knowledge-integration-test npm run dev
+```
+
+Generate `test-fixtures/sample.pdf` (LaTeX content) if missing:
+
+```bash
+node scripts/generate-test-fixtures.mjs
 ```
 
 ## Troubleshooting

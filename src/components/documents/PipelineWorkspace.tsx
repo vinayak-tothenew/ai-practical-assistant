@@ -8,6 +8,7 @@ import { DocumentMetadata } from "@/components/documents/DocumentMetadata";
 import { DocumentUpload } from "@/components/documents/DocumentUpload";
 import { EmbeddedChunkList } from "@/components/documents/EmbeddedChunkList";
 import { ExtractedTextViewer } from "@/components/documents/ExtractedTextViewer";
+import { ChatPanel } from "@/components/documents/ChatPanel";
 import { SearchPanel } from "@/components/documents/SearchPanel";
 import type { EmbeddedChunkedDocument } from "@/lib/embeddings/types";
 import type { IngestedDocument } from "@/lib/documents/types";
@@ -52,8 +53,8 @@ export function PipelineWorkspace() {
             Enterprise Knowledge Assistant
           </h1>
           <p className="max-w-2xl text-zinc-600 dark:text-zinc-400">
-            Milestone 4: ingest, chunk, embed, index in ChromaDB, and retrieve
-            relevant policy chunks with semantic search.
+            Milestone 5: ingest, chunk, embed, index, retrieve, and generate
+            grounded answers with Gemini.
           </p>
         </header>
 
@@ -133,6 +134,7 @@ export function PipelineWorkspace() {
               distance.
             </div>
             <SearchPanel documentId={document?.id} />
+            <ChatPanel documentId={document?.id} />
           </section>
         )}
       </main>

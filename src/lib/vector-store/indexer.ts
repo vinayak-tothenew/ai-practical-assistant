@@ -2,8 +2,8 @@ import "server-only";
 
 import type { EmbeddedChunkedDocument } from "../embeddings/types";
 import { AppError } from "../utils/errors";
-import { getOrCreateKnowledgeCollection } from "./collection";
-import { COLLECTION_NAME, INDEX_BATCH_SIZE } from "./constants";
+import { getCollectionName, getOrCreateKnowledgeCollection } from "./collection";
+import { INDEX_BATCH_SIZE } from "./constants";
 import type { ChromaChunkMetadata, IndexResponse } from "./types";
 import { indexResponseSchema } from "./types";
 
@@ -77,7 +77,7 @@ export async function indexEmbeddedDocument(
   const response: IndexResponse = {
     documentId: embeddedDocument.documentId,
     indexedChunks: chunks.length,
-    collection: COLLECTION_NAME,
+    collection: getCollectionName(),
     distanceMetric: "cosine",
     indexedAt,
   };
